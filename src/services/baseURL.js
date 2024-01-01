@@ -1,0 +1,1 @@
+export const BASE_URL = 'https://project-fair-app-backend-server.onrender.com'

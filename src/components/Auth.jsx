@@ -1,10 +1,94 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Form from 'react-bootstrap/Form';
 import titleimage from '../assets//toppng.com-create-animated-png-campaña-de-marketi-518x369.png'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { LoginAPI, registerAPI } from '../services/allAPI';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Auth({register}) {
+    // to hold the value from the input box
+    const [userData, setUserData]= useState({
+        username:"",
+        email:"",
+        password:""
+    })
+    console.log(userData);
+
+    //for navigate
+    const navigate = useNavigate()
+
     const registerForm =register?true:false
+
+    //register button
+
+    const handleRegister = async(e)=>{
+        e.preventDefault()
+
+        const {username,email,password} = userData
+
+        if(!username || !email || !password){
+            toast.info('Please fill the Data Completely')
+        }
+        else{
+            const result = await registerAPI(userData)
+            /* console.log(result.data); */
+            if(result.status ===200){
+            toast.success(`${result.data.username} is successfully registered`)
+            setUserData({
+                username:"",
+                email:"",
+                password:""
+            })
+            //move to login page
+            navigate('/login')
+        }
+        else{
+            toast.error(result.response.data)
+        }
+        }
+    }
+
+    //Login FUnction
+
+    const handleLogin = async(e)=>{
+        e.preventDefault()
+
+        //destructure 
+        const {email,password}=userData
+
+        if(!email || !password){
+            toast.info('Please fill the Form Completetly')
+
+        }
+        else{
+            const result = await LoginAPI(userData)
+            console.log(result);
+
+            if(result.status === 200){
+                toast.success('Login Successfull')
+
+                sessionStorage.setItem("existingUser",JSON.stringify(result.data.existingUser))
+                sessionStorage.setItem("token",result.data.token)
+
+                setUserData({
+                    username:"",
+                    email:"",
+                    password:""
+
+                })
+
+                //navigate
+                setTimeout(() => {
+                    navigate('/')
+                }, 1500);
+            }
+            else{
+                toast.error(result.response.data)
+
+            }
+        }
+    }
   return (
     <>
  
@@ -35,7 +119,7 @@ function Auth({register}) {
                                     registerForm && 
                                     <Form.Group className="mb-3" controlId="formBasicEmail">
                                     <Form.Label>Username</Form.Label>
-                                    <Form.Control type="text" placeholder="Enter a username" />
+                                    <Form.Control type="text" placeholder="Enter a username"  value={userData.username} onChange={(e)=>setUserData({...userData,username:e.target.value})}/>
                                    
                                 </Form.Group>
     
@@ -43,7 +127,7 @@ function Auth({register}) {
                                 }
                                     <Form.Group className="mb-2" controlId="formBasicEmail">
                                     <Form.Label>Email address </Form.Label>
-                                    <Form.Control type="email" placeholder="Enter email" />
+                                    <Form.Control type="email" placeholder="Enter email" value={userData.email} onChange={(e)=>setUserData({...userData,email:e.target.value})}/>
                                 </Form.Group>
                                 <Form.Text className="text-muted">
                                     We'll never share your email with anyone else.
@@ -51,7 +135,7 @@ function Auth({register}) {
     
                                     <Form.Group className="mb-3 mt-2" controlId="formBasicPassword">
                                     <Form.Label>Password</Form.Label>
-                                    <Form.Control type="password" placeholder="Type your Password" />
+                                    <Form.Control type="password" placeholder="Type your Password" value={userData.password} onChange={(e)=>setUserData({...userData,password:e.target.value})}/>
                                     </Form.Group>
     
     
@@ -62,11 +146,11 @@ function Auth({register}) {
                                         
                                     <div>
                                         <p>Already a user? Click here to <Link to={'/login'} style={{color:"blue"}}>Login</Link> </p>                                   
-                                        <button className='btn btn-outline-dark fw-bolder'>Register</button>
+                                        <button className='btn btn-outline-dark fw-bolder' onClick={handleRegister} >Register</button>
                                     </div>:
                                        <div>
                                        <p>Don't have an account? Click here to <Link to={'/register'} style={{color:"blue"}}>Register</Link> </p>
-                                       <button className='btn btn-outline-dark fw-bolder'>Login</button>
+                                       <button className='btn btn-outline-dark fw-bolder' onClick={handleLogin}>Login</button>
                                    </div>
     
     
@@ -87,6 +171,7 @@ function Auth({register}) {
          
             
       </div>
+      <ToastContainer autoClose={2000} theme='colored' position='top-center' />
  
     
     </>
